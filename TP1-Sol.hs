@@ -30,7 +30,9 @@ mainloop estado = do
                nuevoestado <- cargar inh estado3
                hClose inh
                putStrLn $ "Archivo " ++ nombreArchivo ++ " fue cargado"
-               mainloop nuevoestado
+               let llaves =keys nuevoestado
+               let nuevoestado2 = delete_value nuevoestado llaves
+               mainloop nuevoestado2
                -- putStrLn $ "Comando leer desactivado"
                -- mainloop estado
      "guardar" -> do
@@ -92,11 +94,15 @@ cargar inh estado = do
       if ineof then return estado
                else do inpStr <- hGetLine inh
                        --sum1 to class p
-                       let p = (head (words (map toUpper inpStr)))
+                       --let replace0 = map (\c -> if (isMember c ['a'..'z']) then c; else ' ')
+                       --putStrLn (replace1 inpStr)
+                       let palabras = (words (map toLower(replace1 inpStr)))
+                       
+                       let p = head palabras
                        let estado1 = sumP estado "P" p
                        --sum1 al resto de palaras
-                       let nuevoestado = foldl contar_token estado1 (nub (tail (words (map toLower inpStr))))
-                       let nuevoestado2 = selectSumEstadoP nuevoestado (tail (words (map toLower inpStr))) p
+                       let nuevoestado = foldl contar_token estado1 (nub (tail palabras))
+                       let nuevoestado2 = selectSumEstadoP nuevoestado (tail palabras) p
                        let estado2 = sumEstado nuevoestado2 "N" "1"
                        cargar inh estado2
 
@@ -113,6 +119,21 @@ contar_token estado tok = case lookup tok estado of
                                Nothing -> insert tok [1,0,0,0] estado
                                Just valor -> insert tok (sum1to1 valor) estado
                                --insert( key value hashmap)                          
+--mycompare:: [Int]->Bool
+mycompare x = case x of
+    Just a -> if (a!!0<3) then True
+                else False
+
+delete_Ni3 ::Estado -> String -> Estado
+delete_Ni3 estado x = if (mycompare(lookup x estado))
+    --((fromIntegral(lookup x estado)!!0 )< 3) 
+    then delete x estado
+    else estado
+
+delete_value:: Estado -> [String] ->Estado
+delete_value estado [] = estado
+delete_value estado (x:xs) = do let nuevoestado = (delete_Ni3 estado x)
+                                delete_value nuevoestado xs 
 
 initEstado :: Estado -> String -> [Int] -> Estado
 --recibe un hashmap y una palabra
@@ -186,3 +207,17 @@ selectSumP array b = case b of
         sum1to4 array
     "4" -> do
         sum1to4 array
+
+isMember n [] = False
+isMember n (x:xs)
+    | n == x = True
+    | otherwise = isMember n xs
+
+    
+replace0::[String]->[String]
+replace0 [] = []
+replace0 (x:xs) = [replace1 x] ++ replace0 xs
+    
+replace1::String->String
+replace1 [] = []
+replace1 (x:xs) = [if ((isMember x ['a'..'z'] )||( isMember x ['0'..'4'])) then x; else ' ']++replace1 xs
