@@ -7,7 +7,7 @@ import System.IO
 
 run = sort [5,2,8,3,4]
 
-type Estado = HashMap [Char] [Int]
+type Estado = HashMap [Char] ([Int],Float)
 
 main :: IO ()
 main = do 
@@ -116,14 +116,13 @@ contar_token estado tok = case lookup tok estado of
                                 --lookup ( key hashmap)
                                --Nothing -> insert tok (selectSumP [1,0,0,0] p) estado
                                --Just valor -> insert tok (selectSumP (sum1to1 valor) p) estado
-                               Nothing -> insert tok [1,0,0,0] estado
-                               Just valor -> insert tok (sum1to1 valor) estado
+                               Nothing -> insert tok ([1,0,0,0],0) estado
+                               Just valor -> insert tok ((sum1to1 (fst (valor))),0) estado
                                --insert( key value hashmap)                          
 --mycompare:: [Int]->Bool
 mycompare x = case x of
-    Just a -> if (a!!0<3) then True
+    Just a -> if ((fst a)!!0<3) then True
                 else False
-
 delete_Ni3 ::Estado -> String -> Estado
 delete_Ni3 estado x = if (mycompare(lookup x estado))
     --((fromIntegral(lookup x estado)!!0 )< 3) 
@@ -139,8 +138,8 @@ initEstado :: Estado -> String -> [Int] -> Estado
 --recibe un hashmap y una palabra
 initEstado estado tok array = case lookup tok estado of
                                 --lookup ( key hashmap)
-                               Nothing -> insert tok array estado
-                               Just valor -> insert tok (array) estado
+                               Nothing -> insert tok (array,0) estado
+                               Just valor -> insert tok (array,0) estado
                                --insert( key value hashmap)
 -- descargar :: Handle -> [(String,Int)] -> IO ()
 descargar outh [] = return ()
@@ -163,31 +162,31 @@ sum1to4 (x:xs:xl:xxl:xxxl) = [x]++[xs]++[xl]++[xxl+1]++xxxl
 sumEstado :: Estado -> String ->String -> Estado
 sumEstado estado tok indice = case lookup tok estado of
         --lookup ( key hashmap)
-        Just valor -> insert tok (selectSum valor indice) estado
+        Just valor -> insert tok ((selectSum valor indice),0) estado
         --Nothing -> insert tok array estado --JAMASS!
 
-selectSum::[Int]->String->[Int]
+selectSum::([Int],Float)->String->[Int]
 selectSum array b = case b of
     "1" -> do
-        sum1to1 array
+        sum1to1 (fst array)
     "2" -> do
-        sum1to2 array
+        sum1to2 (fst array)
     "3" -> do
-        sum1to3 array
+        sum1to3 (fst array)
     "4" -> do
-        sum1to4 array
+        sum1to4 (fst array)
 
 sumP :: Estado -> String ->String -> Estado
 sumP estado tok indice = case lookup tok estado of
         --lookup ( key hashmap)
-        Just valor -> insert tok (selectSumP valor indice) estado
+        Just valor -> insert tok ((selectSumP valor indice),0) estado
         --Nothing -> insert tok array estado --JAMASS!
 
 
 insertP::Estado -> String ->String -> Estado
 insertP estado tok indice = case lookup tok estado of
             --lookup ( key hashmap)
-            Just valor -> insert tok (selectSumP valor indice) estado
+            Just valor -> insert tok ((selectSumP valor indice),0) estado
     
 selectSumEstadoP::Estado->[String]->String->Estado
 selectSumEstadoP estado palabras p = 
@@ -195,18 +194,18 @@ selectSumEstadoP estado palabras p =
     else
         selectSumEstadoP (insertP estado (head palabras) p) (tail palabras) p
 
-selectSumP::[Int]->String->[Int]
+selectSumP::([Int],Float)->String->[Int]
 selectSumP array b = case b of
     "0" -> do
-        sum1to2 array
+        sum1to2 (fst array)
     "1" -> do
-        sum1to2 array
+        sum1to2 (fst array)
     "2" -> do
-        sum1to3 array
+        sum1to3 (fst array)
     "3" -> do
-        sum1to4 array
+        sum1to4 (fst array)
     "4" -> do
-        sum1to4 array
+        sum1to4 (fst array)
 
 isMember n [] = False
 isMember n (x:xs)
@@ -221,3 +220,4 @@ replace0 (x:xs) = [replace1 x] ++ replace0 xs
 replace1::String->String
 replace1 [] = []
 replace1 (x:xs) = [if ((isMember x ['a'..'z'] )||( isMember x ['0'..'4'])) then x; else ' ']++replace1 xs
+
