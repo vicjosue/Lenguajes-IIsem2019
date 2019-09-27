@@ -7,7 +7,7 @@ import System.IO
 
 run = sort [5,2,8,3,4]
 
-type Estado = HashMap [Char] ([Int],Float)
+type Estado = HashMap [Char] ([Int],Double)
 
 main :: IO ()
 main = do 
@@ -25,16 +25,24 @@ mainloop estado = do
                putStrLn ">>> Nombre archivo entrada: "
                nombreArchivo <- getLine
                inh <- openFile nombreArchivo ReadMode
-               let estado2 = initEstado estado "N" [0,0,0,0]--only use first
-               let estado3 = initEstado estado2 "P" [0,0,0,0]--[positive,neutral,negative,no used]
+               let estado1 = fromList[]
+               let estado2 = initEstado estado1 "N" [0,0,0,0]--only use first
+               let estado3 = initEstado estado2 "P" [3,0,0,0]--[randomValue,positive,neutral,negative]
                nuevoestado <- cargar inh estado3
                hClose inh
                putStrLn $ "Archivo " ++ nombreArchivo ++ " fue cargado"
                let llaves =keys nuevoestado
                let nuevoestado2 = delete_value nuevoestado llaves
-               mainloop nuevoestado2
+               let h_value = h nuevoestado2
+               let llaves2 = keys nuevoestado2
+               let estadofinal = h_ki llaves2 nuevoestado2
+               putStrLn (show h_value)
+               --putStrLn (show (getN nuevoestado2))
+               --putStrLn (show (to0(getP nuevoestado2)))
+               mainloop estadofinal
                -- putStrLn $ "Comando leer desactivado"
                -- mainloop estado
+
      "guardar" -> do
                putStrLn ">>> Nombre archivo salida: "
                nombreArchivo <- getLine
@@ -43,27 +51,31 @@ mainloop estado = do
                hClose outh
                -- putStrLn $ "Comando guardar desactivado"
                mainloop estado     
+
      "clin" -> do
                 let (nuevoestado, salida)= contar_linea (tail tokens) estado
                 putStrLn salida
                 mainloop nuevoestado
      
      "borrar" -> do
-                   let (nuevoestado, salida)= cmd_borrar (tail tokens) estado
-                   putStrLn salida
-                   mainloop nuevoestado
+                let (nuevoestado, salida)= cmd_borrar (tail tokens) estado
+                putStrLn salida
+                mainloop nuevoestado
                    -- putStrLn $ "Comando borrar desactivado"
                    -- mainloop estado
+
      "imp" -> do
-                 let (nuevoestado, salida) = cmd_imp estado
-                 putStrLn salida
-                 mainloop nuevoestado
+                let (nuevoestado, salida) = cmd_imp estado
+                putStrLn salida
+                mainloop nuevoestado
+
      "fin" -> do
-                 putStrLn "Saliendo..."
+                putStrLn "Saliendo..."
+                
      _     -> do
-                 putStrLn $ "Comando desconocido ("++ comando ++"): '" ++ inpStr ++ "'" 
-                 mainloop estado
-                 
+                putStrLn $ "Comando desconocido ("++ comando ++"): '" ++ inpStr ++ "'" 
+                mainloop estado
+                
 -- función que implementa el comando def
 -- cmd_def::[String] -> Estado -> (Estado, String)
 -- cmd_def tokens estado = (nuevoestado, mensaje)
@@ -96,7 +108,7 @@ cargar inh estado = do
                        --sum1 to class p
                        --let replace0 = map (\c -> if (isMember c ['a'..'z']) then c; else ' ')
                        --putStrLn (replace1 inpStr)
-                       let palabras = (words (map toLower(replace1 inpStr)))
+                       let palabras = nub (words (map toLower(replace1 inpStr)))
                        
                        let p = head palabras
                        let estado1 = sumP estado "P" p
@@ -142,6 +154,7 @@ initEstado estado tok array = case lookup tok estado of
                                Just valor -> insert tok (array,0) estado
                                --insert( key value hashmap)
 -- descargar :: Handle -> [(String,Int)] -> IO ()
+
 descargar outh [] = return ()
 descargar outh ((k,v):kvs) = do hPutStrLn outh $ k ++ " " ++ (show v)
                                 descargar outh kvs
@@ -165,7 +178,7 @@ sumEstado estado tok indice = case lookup tok estado of
         Just valor -> insert tok ((selectSum valor indice),0) estado
         --Nothing -> insert tok array estado --JAMASS!
 
-selectSum::([Int],Float)->String->[Int]
+selectSum::([Int],Double)->String->[Int]
 selectSum array b = case b of
     "1" -> do
         sum1to1 (fst array)
@@ -182,19 +195,18 @@ sumP estado tok indice = case lookup tok estado of
         Just valor -> insert tok ((selectSumP valor indice),0) estado
         --Nothing -> insert tok array estado --JAMASS!
 
-
 insertP::Estado -> String ->String -> Estado
 insertP estado tok indice = case lookup tok estado of
             --lookup ( key hashmap)
             Just valor -> insert tok ((selectSumP valor indice),0) estado
-    
+
 selectSumEstadoP::Estado->[String]->String->Estado
 selectSumEstadoP estado palabras p = 
     if palabras==[] then estado
     else
         selectSumEstadoP (insertP estado (head palabras) p) (tail palabras) p
 
-selectSumP::([Int],Float)->String->[Int]
+selectSumP::([Int],Double)->String->[Int]
 selectSumP array b = case b of
     "0" -> do
         sum1to2 (fst array)
@@ -221,3 +233,85 @@ replace1::String->String
 replace1 [] = []
 replace1 (x:xs) = [if ((isMember x ['a'..'z'] )||( isMember x ['0'..'4'])) then x; else ' ']++replace1 xs
 
+-- Ejemplo de como calcular
+--H = suma ( (np / N) * log2(np / N) )
+--         i=1..#clases 
+
+log2::Double->Double
+log2 x = if x == 0 then 0
+                   else log(x)/log(2)
+
+f::Double->Double
+f x = x * log2(x)
+
+-- map primero divide cada entrada entre n
+-- y luego obtiene x log2 x
+--h n listax = - sum (map (f . (\y->y/n)) listax)
+mylog::Double->Double->Double
+mylog y n = if (y==0) then 0
+        else  logBase 2 (y/  n ) 
+
+h::Estado->Double
+h estado = - sum ( map (\y->( (fromIntegral y)/ (fromIntegral (getN estado)) * (mylog (fromIntegral y) (fromIntegral(getN estado))))) (to0(getP estado)) )
+
+getN::Estado->Int
+getN estado = case (lookup "N" estado) of
+    Just valor -> ((fst (valor))!!0)
+
+getP::Estado->[Int]
+getP estado = case (lookup "P" estado) of
+    Just valor -> (fst valor)
+    Nothing -> [] --JAMASS!
+
+to0::[Int]->[Int]
+to0 []=[]
+to0 (x:xs) = xs
+
+get1::String->Estado->Int
+get1 x estado = case (lookup x estado) of
+    Just valor -> ((fst (valor))!!0)
+
+get2::String->Estado->Int
+get2 x estado = case (lookup x estado) of
+    Just valor -> ((fst (valor))!!1)
+
+get3::String->Estado->Int
+get3 x estado = case (lookup x estado) of
+    Just valor -> ((fst (valor))!!2)
+
+get4::String->Estado->Int
+get4 x estado = case (lookup x estado) of
+    Just valor -> ((fst (valor))!!3)
+
+h_ki::[String]->Estado->Estado
+h_ki [] estado = estado
+h_ki (x:xs) estado = do
+    let nuevoestado = get_Hki x estado
+    h_ki xs nuevoestado
+
+get_Hki::String->Estado->Estado
+get_Hki llave estado = case lookup llave estado of
+    Just value -> insert llave ((fst value),((h estado) - (formula llave estado)) ) estado
+
+formula::String->Estado->Double
+formula llave estado = do
+    let n_i = (get1 llave estado)
+    let n = (getN estado)
+    ( (f (fromIntegral n_i)) +  (f (fromIntegral n - fromIntegral n_i)) + ((formula2 estado llave)))/fromIntegral n
+    --(n_i * (logBase 2 n_i )) + (n-n_i)*(logBase 2  (n-n_i)) - (formula2 estado llave)/n
+
+formula2::Estado->String->Double
+formula2 estado llave = do
+    let n_ip1 = get2 llave estado
+    let n_ip2 = get3 llave estado
+    let n_ip3 = get4 llave estado
+
+    let primersuma = - ( f(fromIntegral n_ip1) + f(fromIntegral n_ip2) + f(fromIntegral n_ip3) )
+        -- n_ip1 * (logBase 2  (n_ip1)) + n_ip2 * (logBase 2  (n_ip2)) + n_ip3 * (logBase 2  (n_ip3))
+        
+    let np_array = (to0(getP estado))
+    let x1 =f (fromIntegral(np_array!!0) - (fromIntegral n_ip1)) -- * (logBase 2 (np_array!!0 - n_ip1))
+    let x2 =f (fromIntegral(np_array!!1) - (fromIntegral n_ip2)) -- * (logBase 2 (np_array!!1 - n_ip2))
+    let x3 =f (fromIntegral(np_array!!2) - (fromIntegral n_ip3) )--(logBase 2 (fromIntegral((np_array!!2) - (n_ip3))))
+    let segundasuma = x1 + x2 + x3
+    primersuma - segundasuma
