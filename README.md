@@ -17,3 +17,7 @@ mostrar las m palabras con los mejores valores de GI; en orden descendente; el v
 guardar en un archivo  las palabras junto con sus valores de GI
 
 Para calcular GI, primero se debe calcular la entropía H.
+
+# TP2-LENGUAJES-IIsem2019
+
+Esta tarea consiste en resolver acertijos lógicos usando Prolog.  Dichos acertijos consisten de algunos hechos acerca de un número pequeño de objetos que tienen varios atributos.  Se especifica un número mínimo de hechos acerca de los objetos y sus atributos de modo que se obtenga una única manera de asociar atributos con objetos.
