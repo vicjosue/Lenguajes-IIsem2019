@@ -1,0 +1,32 @@
+defp tco tornillo-corto 0.01000
+defp tla tornillo-largo 0.02000
+defp tue tuerca 0.01000
+defp lam lamina 0.10000
+defp e3d esquina3d 0.12000
+mostrar
+defc panel panel tla 4 tue 12 lam 2
+defc cubo cubo tco 24 tue 24 e3d 8 panel 6
+defc te te-cubos tco 20 tue 20 cubo 6
+
+expandir cubo 2 te 1
+expandir cubo 2 te 1 - panel
+componenteMax tco 100 tla 100 tue 200 lam 20 e3d 10
+faltante cubo 2 - tco 100 tla 100 tue 200 lam 20 e3d 10
+
+
+defp ld6 ladrillo-6 0.15
+defp ld8 ladrillo-8 0.25
+defp ld16 ladrillo-16 0.35
+defp ld4h ladrillo-4-con-huecos 0.20
+defp la6x16 lamina-6x16 0.30
+defp l2x8h lamina-2x8-con-huecos 0.40
+defp aro aro 0.50
+defp llan llanta 0.45
+defp ej8 eje-8 0.17
+defc cajon cajón ld4h 1 ld6 1 ld8 2 ld16 2 la6x16 1 l2x8h 1
+defc carr carreta cajon 1 ld4h 2 aro 2 llan 2 ej8 1
+
+expandir carr 2 cajon 1
+expandir carr 1 cajon 1 – cajon
+componenteMax ld6 3 ld8 6 ld16 6 ld4h 7 la6x16 3 l2x8h 3 aro 4 llan 4 ej8 1
+faltante carr 2 - ld6 3 ld8 6 ld16 6 ld4h 4 la6x16 3 l2x8h 3 aro 3 llan 4 ej8 1
