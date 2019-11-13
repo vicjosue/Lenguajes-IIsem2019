@@ -1,0 +1,9 @@
+2 oportunidad urgente oportunidad
+4 respuesta otro decision otro decision
+2 decision urgente decision oportunidad decision
+0 respuesta oferta
+2 oportunidad salud respuesta respuesta salud otro salud
+0 salud urgente oferta
+0 oferta respuesta oportunidad oferta
+3 urgente decision respuesta urgente decision respuesta
+1 urgente decision oferta respuesta otro urgente decision oferta respuesta otro urgente decision oferta respuesta otro
